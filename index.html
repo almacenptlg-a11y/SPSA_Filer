@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPSAFiler Pro v32.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f3f5;
+            --bg-input: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --border-color: #dfe6e9;
+            --primary-gradient: linear-gradient(135deg, #C50D23 0%, #8E54E9 100%);
+            --accent-color: #C50D23;
+            --card-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            --order-row-bg: rgba(128,128,128, 0.04);
+            --details-bg: #ffffff;
+            --table-head-text: #636e72;
+            --desc-tag-bg: rgba(197, 13, 35, 0.08);
+            --desc-tag-text: #C50D23;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0d0d0d;
+            --bg-card: #1a1a1a;
+            --bg-hover: #262626;
+            --bg-input: #262626;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+            --primary-gradient: linear-gradient(135deg, #C50D23 0%, #5c0611 100%);
+            --accent-color: #ff4d60;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            --order-row-bg: #222222;
+            --details-bg: #111111;
+            --table-head-text: #d1d1d1;
+            --desc-tag-bg: rgba(255, 77, 96, 0.15);
+            --desc-tag-text: #ff8a96;
+        }
+
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
+
+        /* --- CONTAINER CENTRADO --- */
+        .main-wrapper { max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        .navbar-custom { 
+            background: var(--bg-card); padding: 0.4rem 1.5rem; 
+            border-bottom: 1px solid var(--border-color); 
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .app-logo { height: 38px; width: auto; }
+
+        .btn-grad { 
+            border: none; color: white; padding: 6px 14px; border-radius: 8px; 
+            font-weight: 600; font-size: 0.75rem; transition: 0.2s; 
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-primary-grad { background: var(--primary-gradient); }
+        .btn-success-grad { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .btn-csv-grad { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+        .btn-grad:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        .btn-grad:active:not(:disabled) { transform: translateY(0); }
+        .btn-grad:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+
+        .dropzone { 
+            background: var(--bg-card); border: 1.5px dashed var(--border-color); border-radius: 10px; 
+            padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: flex-start; gap: 15px; 
+            cursor: pointer; transition: 0.3s; margin-top: 0.75rem;
+        }
+        .dropzone:hover { border-color: var(--accent-color); background: var(--bg-hover); }
+
+        .search-area { margin-top: 1rem; margin-bottom: 1rem; }
+        .search-box { 
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            border-radius: 8px; padding: 8px 40px; width: 100%; color: var(--text-main); 
+            outline: none; font-size: 0.9rem; box-shadow: var(--card-shadow);
+        }
+        .search-box:focus { border-color: var(--accent-color); }
+        .search-icon { position: absolute; left: 15px; top: 10px; color: var(--text-muted); font-size: 0.9rem; }
+
+        .local-card { background: var(--bg-card); border-radius: 10px; margin-bottom: 0.75rem; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); }
+        .local-header { padding: 10px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .local-header:hover { background: var(--bg-hover); }
+
+        .order-row { padding: 8px 20px; border-top: 1px solid var(--border-color); background: var(--order-row-bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; transition: 0.2s; }
+        .order-row:hover { background: var(--bg-hover); }
+
+        .details-panel { background-color: var(--details-bg) !important; color: var(--text-main); }
+        .custom-table { width: 100%; border-collapse: collapse; background-color: transparent; }
+        .custom-table th { color: var(--table-head-text); font-weight: 600; font-size: 0.7rem; padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-transform: uppercase; }
+        .custom-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+
+        .ean-text { font-family: 'Courier New', monospace; color: var(--text-main); font-weight: 700; opacity: 0.9; }
+        .desc-tag { background: var(--desc-tag-bg); color: var(--desc-tag-text); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.8rem; }
+        .stat-badge { background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
+
+        .hidden { display: none !important; }
+        .rotate { transform: rotate(180deg); }
+        .chevron { transition: 0.2s ease; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar-custom">
+        <div class="main-wrapper d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <svg class="app-logo" viewBox="0 0 284 164" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m142 7 135 47v56l-135 47-135-47V54z" fill="#C50D23" stroke="#C50D23" stroke-width="10" stroke-linejoin="round"></path>
+                    <path d="m142 7 135 47v56l-135 47-135-47V54z" fill="none" stroke="#B08D57" stroke-width="2" stroke-linejoin="round"></path>
+                    <text x="142" y="68" font-family="Times, serif" font-size="36" font-weight="bold" text-anchor="middle" fill="#404040">LA</text>
+                    <text x="142" y="67" font-family="Times, serif" font-size="36" font-weight="bold" text-anchor="middle" fill="#FFF">LA</text>
+                    <text x="142" y="103" font-family="Times, serif" font-size="42" font-weight="bold" text-anchor="middle" fill="#404040">GENOVESA</text>
+                    <text x="142" y="102" font-family="Times, serif" font-size="42" font-weight="bold" text-anchor="middle" fill="#FFF">GENOVESA</text>
+                    <text x="142" y="127" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#FFF" letter-spacing="3">DESDE 1977</text>
+                </svg>
+		<span class="d-none d-md-inline fw-bold opacity-75">SPSA Filer</span>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button class="btn-grad btn-primary-grad" id="btnProcess" onclick="processFiles()" disabled><i class="bi bi-lightning-charge"></i> Procesar PDFs</button>
+                <button class="btn-grad btn-success-grad" id="btnExcel" onclick="exportToExcel()" disabled><i class="bi bi-file-spreadsheet"></i> Descargar XLSX</button>
+                <button class="btn-grad btn-csv-grad" id="btnCSV" onclick="exportToCSV()" disabled><i class="bi bi-filetype-csv"></i> Descargar CSV</button>
+                <button class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; padding: 6px 12px;" onclick="toggleTheme()"><i class="bi bi-circle-half"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrapper px-3">
+        <div class="dropzone shadow-sm" id="dropArea">
+            <i class="bi bi-folder-plus text-primary fs-5"></i>
+            <div class="text-start">
+                <h6 class="fw-bold m-0" style="font-size: 0.85rem;">Consola de Carga</h6>
+                <p id="fileStatus" class="text-muted m-0" style="font-size: 0.7rem;">Sube tus PDFs de SPSA o Makro aquí.</p>
+            </div>
+            <input type="file" id="fileInput" multiple accept=".pdf" style="display: none;">
+        </div>
+
+        <div class="search-area">
+            <div style="position: relative;">
+                <i class="bi bi-search" style="position: absolute; left: 15px; top: 10px; color: var(--text-muted);"></i>
+                <input type="text" id="searchInput" class="search-box" placeholder="Filtrar por producto, local o EAN..." oninput="filterDashboard()" disabled>
+            </div>
+        </div>
+
+        <div id="dashboardContainer"></div>
+    </div>
+
+<script>
+    const getFileTimestamp = () => {
+        const d = new Date();
+        const pad = (n) => n < 10 ? '0' + n : n;
+        return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+    };
+
+    const dropArea = document.getElementById('dropArea');
+    const fileInput = document.getElementById('fileInput');
+    let globalData = [];
+    let processedGroupedData = {};
+
+    dropArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', function() { handleFiles(this.files); });
+
+    function handleFiles(files) {
+        if (files.length > 0) {
+            fileInput.files = files;
+            document.getElementById('fileStatus').innerHTML = `<span class="text-primary fw-bold">${files.length} archivos listos para procesar.</span>`;
+            document.getElementById('btnProcess').disabled = false;
+        }
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    }
+
+    function normalizeStr(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; }
+
+    async function processFiles() {
+        const container = document.getElementById("dashboardContainer");
+        container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div><p class="mt-2 text-muted fw-bold">Interpretando documentos...</p></div>`;
+        
+        globalData = [];
+        for (let file of fileInput.files) { try { await parsePDF(file); } catch(e) { console.error(e); } }
+        
+        processedGroupedData = globalData.reduce((acc, curr) => {
+            if (!acc[curr.lugar]) acc[curr.lugar] = {};
+            if (!acc[curr.lugar][curr.orden]) acc[curr.lugar][curr.orden] = [];
+            acc[curr.lugar][curr.orden].push(curr);
+            return acc;
+        }, {});
+        
+        renderDashboard();
+        document.getElementById('btnExcel').disabled = false;
+        document.getElementById('btnCSV').disabled = false;
+        document.getElementById('searchInput').disabled = false;
+    }
+
+    async function parsePDF(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        const page = await pdf.getPage(1);
+        const textContent = await page.getTextContent();
+        let items = textContent.items.map(it => ({ str: it.str.trim(), x: it.transform[4], y: it.transform[5] })).filter(i => i.str !== "");
+        let fullDoc = items.map(i => i.str).join(" ");
+        let orderMatch = fullDoc.match(/(?:Orden|N°)\s*[:]?\s*(\d{8,10})/i) || fullDoc.match(/(\d{8,10})/);
+        let order = orderMatch ? orderMatch[1] : "N/A";
+        let local = "N/A";
+        let labelPlace = items.find(it => it.str.includes("Lugar Entrega"));
+        if (labelPlace) {
+            local = items.filter(it => Math.abs(it.y - labelPlace.y) < 8 && it.x > labelPlace.x).map(v => v.str).join(" ").split(/Dirección|Ciudad|Fecha/i)[0].replace(/SPSA|[:]/g, "").trim();
+        }
+        let dates = fullDoc.match(/\b\d{2}-\d{2}-\d{4}\b/g) || [];
+        let emi = dates[0] || "N/A";
+        let del = dates[1] || emi;
+
+        items.sort((a, b) => b.y - a.y);
+        let rows = [];
+        items.forEach(item => {
+            let lastRow = rows[rows.length - 1];
+            if (lastRow && Math.abs(item.y - lastRow.y) < 5) lastRow.items.push(item);
+            else rows.push({ y: item.y, items: [item] });
+        });
+
+        for (let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            row.items.sort((a, b) => a.x - b.x);
+            let eanMatch = row.items.find(it => /\b775\d{10}\b/.test(it.str));
+            if (eanMatch) {
+                let ean = eanMatch.str.match(/\b775\d{10}\b/)[0];
+                let qtyStr = (row.items.find(it => it.x > 260 && it.x < 420 && /^[\d.,]+$/.test(it.str)) || {str:"0"}).str;
+                let totals = row.items.filter(it => it.x > 450 && /^[\d.,]+$/.test(it.str));
+                let frags = [];
+                row.items.forEach(it => {
+                    if (it.x < 315 && it.str !== qtyStr && !/^\d{8}$/.test(it.str)) {
+                        let clean = it.str.replace(ean, "").replace(/Descripción|Código|EAN|Cantidad|Supermercad|SKU|Supermercado/gi, "").replace(/^[:\s-]+/, "").trim();
+                        if (clean) frags.push(clean);
+                    }
+                });
+                if (i > 0) {
+                    let prevRow = rows[i-1];
+                    let rawPrev = prevRow.items.map(it => it.str).join(" ");
+                    if (Math.abs(prevRow.y - row.y) < 30 && !prevRow.items.some(it => /\b775\d{10}\b/.test(it.str)) && !/Precio Neto|Total Neto|Empaque|Supermercad/i.test(rawPrev)) {
+                        prevRow.items.filter(it => it.x < 315 && !/^\d{8,10}$/.test(it.str)).forEach(it => {
+                            let s = it.str.replace(/Descripción|Código|EAN/gi, "").trim();
+                            if(s) frags.unshift(s);
+                        });
+                    }
+                }
+                globalData.push({
+                    orden: order, lugar: local, emision: emi, entrega: del, ean: ean,
+                    descripcion: frags.join(" ").replace(/\b(Paquetes?|Unidades?|Jabas?|Cajas?|Piezas?)\b/gi, "").replace(/[-.\s]+$/, "").replace(/\s+/g, " ").trim(),
+                    cantidad: qtyStr, neto: totals.length >= 2 ? totals[totals.length - 2].str : "0", bruto: totals.length >= 1 ? totals[totals.length - 1].str : "0"
+                });
+            }
+        }
+    }
+
+    function renderDashboard(filterText = "") {
+        const container = document.getElementById("dashboardContainer");
+        container.innerHTML = "";
+        const cleanFilter = normalizeStr(filterText);
+        
+        if (Object.keys(processedGroupedData).length === 0) return;
+
+        Object.entries(processedGroupedData).forEach(([local, ordenes], localIdx) => {
+            const isLocalMatch = normalizeStr(local).includes(cleanFilter);
+            let localHTML = "";
+            let hasVisibleOrders = false;
+            let localSoles = 0, localOrders = 0;
+
+            Object.entries(ordenes).forEach(([orden, items], orderIdx) => {
+                const isOrderMatch = normalizeStr(orden).includes(cleanFilter);
+                const filteredItems = items.filter(it => !cleanFilter || isLocalMatch || isOrderMatch || normalizeStr(it.descripcion).includes(cleanFilter) || it.ean.includes(cleanFilter));
+                if (filteredItems.length === 0) return;
+
+                hasVisibleOrders = true;
+                localOrders++;
+                const totalOrdenVal = items.reduce((sum, item) => sum + parseMoney(item.bruto), 0);
+                localSoles += totalOrdenVal;
+                
+                const uniqueId = `ord-${localIdx}-${orderIdx}`;
+                const expandClass = cleanFilter ? "" : "hidden";
+                const rotateClass = cleanFilter ? "rotate" : "";
+
+                localHTML += `
+                    <div class="mb-1">
+                        <div class="order-row rounded" onclick="toggleElement('${uniqueId}')">
+                            <div><i class="bi bi-box-fill text-primary me-2"></i> <b>Orden #${orden}</b></div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="stat-badge">${items.length} SKUs</span>
+                                <span class="stat-badge">S/ ${totalOrdenVal.toFixed(2)}</span>
+                                <i class="bi bi-chevron-down chevron ${rotateClass}" id="chevron-${uniqueId}"></i>
+                            </div>
+                        </div>
+                        <div id="${uniqueId}" class="${expandClass} details-panel p-2">
+                            <table class="custom-table">
+                                <thead><tr><th>EAN</th><th>Producto</th><th class="text-end">Cant</th><th class="text-end">Total</th></tr></thead>
+                                <tbody>
+                                    ${filteredItems.map(item => `
+                                        <tr>
+                                            <td style="width:15%"><span class="ean-text">${item.ean}</span></td>
+                                            <td><span class="desc-tag">${item.descripcion}</span></td>
+                                            <td class="text-end fw-bold">${item.cantidad}</td>
+                                            <td class="text-end text-success fw-bold">${item.bruto}</td>
+                                        </tr>`).join("")}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            });
+
+            if (hasVisibleOrders) {
+                const localId = `loc-${localIdx}`;
+                const expandLocal = cleanFilter ? "" : "hidden";
+                container.innerHTML += `
+                    <div class="local-card shadow-sm">
+                        <div class="local-header" onclick="toggleElement('${localId}')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-geo-alt-fill text-danger"></i> <span class="fw-bold">${local}</span></div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="stat-badge">${localOrders} Órdenes</span>
+                                <span class="stat-badge text-success border-success">Total: S/ ${localSoles.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div id="${localId}" class="p-2 ${expandLocal}" style="background-color: var(--bg-body);">
+                            ${localHTML}
+                        </div>
+                    </div>`;
+            }
+        });
+    }
+
+    function toggleElement(id) {
+        const el = document.getElementById(id);
+        if(el) { el.classList.toggle('hidden'); const chev = document.getElementById('chevron-' + id); if(chev) chev.classList.toggle('rotate'); }
+    }
+
+    function filterDashboard() { renderDashboard(document.getElementById('searchInput').value); }
+
+    function parseMoney(str) {
+        if (!str) return 0;
+        let clean = str.replace(/,/g, "");
+        let parts = clean.split('.');
+        return parts.length > 2 ? parseFloat(parts.slice(0, -1).join("") + "." + parts.slice(-1)) : parseFloat(clean) || 0;
+    }
+
+    function exportToExcel() {
+        const ws = XLSX.utils.json_to_sheet(globalData.map(d => ({
+            "Local": d.lugar, "N° Orden": d.orden, "F. Emisión": d.emision, "F. Entrega": d.entrega,
+            "EAN": d.ean, "Descripción": d.descripcion, "Cant": parseMoney(d.cantidad),
+            "Neto": parseMoney(d.neto), "Total c/IGV": parseMoney(d.bruto)
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "SPSAFiler");
+        XLSX.writeFile(wb, `CONSOLIDADO_SPSA_${getFileTimestamp()}.xlsx`);
+    }
+
+    function exportToCSV() {
+        const headers = ["LOCALIDAD", "ORDEN DE COMPRA", "EMISION", "FECHA DE ENTREGA", "CODIGO", "PRODUCTO X", "PEDIDO", "NETO", "TOTAL"];
+        const csvRows = [headers.join(",")];
+        globalData.forEach(d => {
+            const emiParts = d.emision.split('-');
+            const delParts = d.entrega.split('-');
+            const emiCSV = emiParts.length === 3 ? `${emiParts[1]}/${emiParts[0]}/${emiParts[2]}` : d.emision;
+            const delCSV = delParts.length === 3 ? `${delParts[1]}/${delParts[0]}/${delParts[2]}` : d.entrega;
+            csvRows.push([`"${d.lugar}"`,`"${d.orden}"`,`"${emiCSV}"`,`"${delCSV}"`,`"${d.ean}"`,`"${d.descripcion}"`,parseMoney(d.cantidad),parseMoney(d.neto),parseMoney(d.bruto)].join(","));
+        });
+        const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `CONSOLIDADO_SPSA_${getFileTimestamp()}.csv`;
+        link.click();
+    }
+</script>
+</body>
+</html>
