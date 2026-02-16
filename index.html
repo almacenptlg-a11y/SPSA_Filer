@@ -365,7 +365,7 @@
     }
 
     function exportToCSV() {
-        const headers = ["LOCALIDAD", "ORDEN DE COMPRA", "EMISION", "FECHA DE ENTREGA", "CODIGO", "PRODUCTO X", "PEDIDO", "NETO", "TOTAL"];
+        const headers = ["LOCALIDAD", "ORDEN DE COMPRA", "EMISION", "FECHA DE ENTREGA", "SCAN_COD", "PRODUCTO X", "PEDIDO", "NETO", "TOTAL"];
         const csvRows = [headers.join(",")];
         globalData.forEach(d => {
             const emiParts = d.emision.split('-');
