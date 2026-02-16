@@ -163,12 +163,44 @@
     };
 
     const dropArea = document.getElementById('dropArea');
-    const fileInput = document.getElementById('fileInput');
-    let globalData = [];
-    let processedGroupedData = {};
+const fileInput = document.getElementById('fileInput');
 
-    dropArea.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', function() { handleFiles(this.files); });
+// Prevenir comportamiento por defecto en todos los eventos de arrastre
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+    }, false);
+});
+
+// Efecto visual al estar sobre el área
+['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => {
+        dropArea.classList.add('bg-hover');
+        dropArea.style.borderColor = 'var(--accent-color)';
+    }, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => {
+        dropArea.classList.remove('bg-hover');
+        dropArea.style.borderColor = 'var(--border-color)';
+    }, false);
+});
+
+// CAPTURA REAL DE LOS ARCHIVOS AL SOLTAR
+dropArea.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files; // Aquí se capturan los archivos soltados
+    
+    if (files.length > 0) {
+        fileInput.files = files; // Sincroniza los archivos con el input oculto
+        handleFiles(files);      // Llama a tu función de actualización de interfaz
+    }
+}, false);
+
+// Clic normal para abrir explorador
+dropArea.addEventListener('click', () => fileInput.click());
 
     function handleFiles(files) {
         if (files.length > 0) {
